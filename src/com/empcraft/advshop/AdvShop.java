@@ -1112,19 +1112,19 @@ public final class AdvShop extends JavaPlugin implements Listener {
 					free = getFreeSpace(player, item);
 					if (free<amount) {
 						if (free == 0) {
-							msg(player,"&6Your inventory is &cfull&6.");
+							msg(player,getmsg("ERROR11"));
 						}
 						else {
-							msg(player,"&6You only have room for &c"+free+" &6"+name+".");
+							msg(player,getmsg("ERROR12").replace("{INT}",""+free).replace("{STRING}",name));
 						}
 						return true;
 					}
 					if (getBuyValue(item)>money) {
 						if (usingexp) {
-							msg(player,"&6You do not have enough &cexperience&6.");
+							msg(player,getmsg("ERROR13"));
 						}
 						else {
-							msg(player,"&6You do not have enough &cmoney&6.");
+							msg(player,getmsg("ERROR14"));
 						}
 						return true;
 					}
@@ -1138,10 +1138,10 @@ public final class AdvShop extends JavaPlugin implements Listener {
 								if (successful==false) {
 									money+=price;
 									if (total> 0) {
-										msg(player,"&6Shop only had enough for &c"+total+" &6"+name+".");
+										msg(player,getmsg("ERROR15").replace("{INT}",""+total).replace("{STRING}",name));
 									}
 									else {
-										msg(player,"&6Shop is &cout of stock&6 of "+name+".");
+										msg(player,getmsg("ERROR16").replace("{STRING}",name));
 										return true;
 									}
 									break;
@@ -1156,17 +1156,17 @@ public final class AdvShop extends JavaPlugin implements Listener {
 							}
 						}
 						if (hasenough == false) {
-							msg(player,"&6You only had enough for &c"+total+" &6"+name+".");
+							msg(player,getmsg("ERROR15").replace("{INT}",""+total).replace("{STRING}",name));
 						}
 						String ecosymbol = "$";
 						if (usingexp) {
 							expMan.setExp(money);
 							ecosymbol = "exp ";
-							msg(player,"&6Bought &c"+total+" &6of &c"+name+"&6 for &c"+concatDouble((totalmoney-money)+"")+" exp&6.");
+							msg(player,getmsg("INFO8").replace("{INT}",""+total).replace("{STRING}",name).replace("{STRING2}",concatDouble(money+"")+" exp"));
 						}
 						else {
 							econ.withdrawPlayer(player.getName(), totalmoney-money);
-							msg(player,"&6Bought &c"+total+" &6of &c"+name+"&6 for &c$"+concatDouble((totalmoney-money)+"")+"&6.");
+							msg(player,getmsg("INFO8").replace("{INT}",""+total).replace("{STRING}",name).replace("{STRING2}","$"+concatDouble(money+"")));
 						}
 						item.setAmount(total);
 						inventory.addItem(item);
@@ -1194,23 +1194,23 @@ public final class AdvShop extends JavaPlugin implements Listener {
 					}
 				}
 				else {
-					msg(player,"&6You cannot buy &cAIR&6.");
+					msg(player,getmsg("ERROR17").replace("{STRING}","AIR"));
 					return true;
 				}
 				
 			}
 			else {
-				msg(player,"&6/advbuy <item> <amount>");
+				msg(player,getmsg("ERROR4").replace("{STRING}","/advbuy <item> <amount>"));
 			}
 		}
 		else if (cmd.getName().equalsIgnoreCase("value")) {
 			if (checkperm(player,"advshop.value")==false) { 
-				msg(player,"&6You lack the node: &cadvshop.value");
+				msg(player,getmsg("ERROR0").replace("{STRING}","advshop.value"));
 				return false;
 			}
 			
 			if (player == null) {
-				msg(player,"&cThis command can only be executed in-game");
+				msg(player,getmsg("ERROR5"));
 				return false;
 			}
 			if (args.length>0) {
@@ -1246,13 +1246,13 @@ public final class AdvShop extends JavaPlugin implements Listener {
 				if (item.getDurability()!=0) {
 					itemid+="-"+item.getDurability();
 				}
-				msg(player,"&6Item: &c"+name+" &6- &c"+item.getTypeId()+":"+item.getDurability());
+				msg(player,getmsg("INFO4").replace("{STRING}",name).replace("{STRING2}",item.getTypeId()+"").replace("{STRING3}",item.getDurability()+""));
 				try {
-					msg(player,"&6Sell Cost: &c"+concatDouble(""+getSellValue(item)));
-					msg(player,"&6Buy Cost: &c"+concatDouble(""+getBuyValue(item)));
+					msg(player,getmsg("INFO9").replace("{INT}",concatDouble(""+getSellValue(item))));
+					msg(player,getmsg("INFO10").replace("{INT}",concatDouble(""+getBuyValue(item))));
 					try {
-						msg(player,"&6Amount Bought: &c"+prices.getString(itemid+".bought"));
-						msg(player,"&6Amount Sold: &c"+prices.getString(itemid+".sold"));
+						msg(player,getmsg("INFO11").replace("{INT}",prices.getString(itemid+".bought")));
+						msg(player,getmsg("INFO12").replace("{INT}",prices.getString(itemid+".sold")));
 					}
 					catch (Exception e) {
 						
@@ -1260,28 +1260,29 @@ public final class AdvShop extends JavaPlugin implements Listener {
 				}
 				catch (Exception e) {
 					e.printStackTrace();
-					msg(player,"&6Value: &cUtterly worthless");
-					msg(player,"&6Stock: &cLess than 12 parsecs");
+					msg(player,getmsg("ERROR18"));
+					msg(player,getmsg("ERROR19"));
 				}
 				return true;
 			}
 			else {
-				msg(player,"/value <hand|item>");
+				msg(player,getmsg("ERROR4").replace("{STRING}","&c/value <hand|item>"));
 			}
 		}
 		else if(cmd.getName().equalsIgnoreCase("xpp")){
     		if (checkperm(player,"advshop.xpp")) {
     		if (args.length != 2){
-    			msg(player,"&6Use &9/xpp <player> <amount>");
+    			msg(player,getmsg("ERROR4").replace("{STRING}","&c/xpp <player> <amount>"));
     		}
     		else {
     			if (player.getName().equalsIgnoreCase(args[0])!= true) {
     				List<Player> matches = getServer().matchPlayer(args[0]);
     				if (matches.isEmpty()) {
+    					msg(player,getmsg("ERROR20").replace("{STRING}",args[0]));
     					msg(player,"&6No online player found for: &c"+args[0]);
     				}
     				else if (matches.size() > 1) {
-    					msg(player,"&6Too many matches for: &c"+args[0]);
+    					msg(player,getmsg("ERROR21").replace("{STRING}",args[0]));
     				}
     				else {
     					Player user = matches.get(0);
@@ -1295,35 +1296,35 @@ public final class AdvShop extends JavaPlugin implements Listener {
     							      (player).setLevel(0);
     							      (player).setExp(0);
     							      (player).giveExp(myxp - Integer.parseInt(args[1]));
-    							      msg(player,"&6You now have&9: "+(myxp-Integer.parseInt(args[1]))+"&6 XP");
-    							      msg(user,"&6You were sent: &9"+(Integer.parseInt(args[1]))+"&6 XP from &9"+sender.getName());
+    							      msg(player,getmsg("INFO13").replace("{INT}",""+(myxp-Integer.parseInt(args[1]))));
+    							      msg(player,getmsg("INFO14").replace("{INT}",""+(Integer.parseInt(args[1]))));
     							      user.giveExp(Integer.parseInt(args[1]));
     							}
     							else {
-    								msg(player,""+Integer.parseInt(args[1]));
+    								msg(player,getmsg("ERROR24").replace("{INT}",""+args[1]));
     								msg(player,"&6Amount must be positive: &c"+args[1]+".");
     							}
           				  }
     						else {
-    							msg(player,"&6You do not have&c "+Integer.parseInt(args[1])+" exp&6.");
+    							msg(player,getmsg("ERROR25").replace("{INT}",""+args[1]));
     						}
           				  }
           				  catch (Exception e) {
-          					msg(player,"&6Unknown amount&c: "+ args[1]+"&6.");
+          					msg(player,getmsg("ERROR3").replace("{INT}",args[1]+""));
           				  }
     					}
     					else {
-    						msg(player,"&6Cannon &ctrade between worlds&6.");
+    						msg(player,getmsg("ERROR22"));
     					}
     				}
     			}
     			else {
-    				msg(player,"&6Cannot &cpay yourself&6.");
+    				msg(player,getmsg("ERROR23"));
     			}
     		}
     		}
     		else {
-    			msg(player,"&6You lack the node: &cadvshop.xpp");
+    			msg(player,getmsg("ERROR0").replace("{STRING}","advshop.xpp"));
     		}
     	}
 		
