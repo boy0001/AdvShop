@@ -1,0 +1,23 @@
+name: AdvShop
+main: com.empcraft.advshop.AdvShop
+version: 0.0.4
+author: Empire92
+website: www.empcraft.com
+depend: [Vault]
+commands:
+   xpp:
+      description: XP trade command.
+   db:
+      description: AdvShop item data byte command.
+   advbuy:
+      description: AdvShop buy command.
+   advsell:
+      description: AdvShop sell command.
+   advshop:
+      description: AdvShop commands.
+   value:
+      description: AdvShop value command.
+   hand:
+      description: AdvShop itemdb command.
+   sellall:
+      description: AdvShop sellall command.
