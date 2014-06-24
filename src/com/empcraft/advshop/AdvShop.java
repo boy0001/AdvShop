@@ -30,11 +30,15 @@ import org.apache.commons.lang.UnhandledException;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
+import org.bukkit.block.Block;
+import org.bukkit.block.Sign;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.SignChangeEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.material.MaterialData;
@@ -452,6 +456,65 @@ public final class AdvShop extends JavaPlugin implements Listener {
 		prices = YamlConfiguration.loadConfiguration(pricesFile);
 		timer.schedule (mytask,0l, 60000);
 	}
+	@EventHandler
+	public void onSignChange(SignChangeEvent event)
+    {
+		Block block = event.getBlock();
+		Sign sign = (Sign)block.getState();
+		String line1 = event.getLine(0);
+		String line2 = event.getLine(1);
+		Player player = event.getPlayer();
+		if (ChatColor.stripColor(line1).equalsIgnoreCase(ChatColor.stripColor(getmsg("SIGNSUCCESS0")))) {
+			if (checkperm(player,"advshop.create.buy")) {
+				Object[] result = LevensteinDistance(line2);
+				String name = result[1]+"";
+				if ((Integer) result[2] <= getConfig().getInt("item-similarity-match")) {
+					ItemStack item = (ItemStack) result[0];
+					if (name.length()>15) {
+						name = item.getTypeId()+":"+item.getAmount();
+					}
+					sign.setLine(1, name);
+					sign.update(true);
+					msg(player,getmsg("INFO15"));
+				}
+				else {
+					sign.setLine(0,getmsg("SIGNERROR0"));
+					sign.update(true);
+					msg(player,getmsg("SEARCH1").replace("{STRING}",line2.toLowerCase()).replace("{STRING2}",result[1].toString().toLowerCase().replace(" ", "_")));
+				}
+			}
+			else {
+				sign.setLine(0,getmsg("SIGNERROR0"));
+				sign.update(true);
+				msg(player,getmsg("ERROR0").replace("{STRING}","advshop.create.buy"));
+			}
+		}
+		else if (ChatColor.stripColor(line1).equalsIgnoreCase(ChatColor.stripColor(getmsg("SIGNSUCCESS1")))) {
+			if (checkperm(player,"advshop.create.sell")) {
+				Object[] result = LevensteinDistance(line2);
+				String name = result[1]+"";
+				if ((Integer) result[2] <= getConfig().getInt("item-similarity-match")) {
+					ItemStack item = (ItemStack) result[0];
+					if (name.length()>15) {
+						name = item.getTypeId()+":"+item.getAmount();
+					}
+					sign.setLine(1, name);
+					sign.update(true);
+					msg(player,getmsg("INFO15"));
+				}
+				else {
+					sign.setLine(0,getmsg("SIGNERROR1"));
+					sign.update(true);
+					msg(player,getmsg("SEARCH1").replace("{STRING}",line2.toLowerCase()).replace("{STRING2}",result[1].toString().toLowerCase().replace(" ", "_")));
+				}
+			}
+			else {
+				sign.setLine(0,getmsg("SIGNERROR1"));
+				sign.update(true);
+				msg(player,getmsg("ERROR0").replace("{STRING}","advshop.create.sell"));
+			}
+		}
+    }
 	public int getVolume(ItemStack item) {
 		int id = item.getTypeId();
 		int damage = item.getDurability();
@@ -1065,7 +1128,6 @@ public final class AdvShop extends JavaPlugin implements Listener {
 					msg(player,getmsg("ERROR0").replace("{STRING}","advshop.buy"));
 					return true;
 				}
-				
 				if (player == null) {
 					msg(player,getmsg("ERROR5"));
 					return true;

@@ -1,3 +1,6 @@
+# If you would like to customize the idlist, this is now possible using the idlist setting.
+# You should not edit this file but you can edit a copy (e.g. rename it to customid.yml)
+# The "idlist: idlist" in the "config.yml" should change to reflect this (e.g. "idlist: customid")
 item-ids:
   0: Air
   1: Stone,Rock
