@@ -411,7 +411,7 @@ public final class AdvShop extends JavaPlugin implements Listener {
 	@Override
 	public void onEnable(){
 		plugin = this;
-		version = "0.1.0";
+		version = "0.2.0";
         if (!setupEconomy() ) {
             log.severe(String.format("[%s] - Disabled due to no Vault dependency found!", getDescription().getName()));
             Bukkit.getServer().getPluginManager().disablePlugin(this);
@@ -832,16 +832,19 @@ public final class AdvShop extends JavaPlugin implements Listener {
 			        if(myfile.exists()!=true) {  saveResource("prices.yml", false); }
 			        getConfig().options().copyDefaults(true);
 			        final Map<String, Object> options = new HashMap<String, Object>();
-			        getConfig().set("version", "0.0.1");
+			        getConfig().set("version", version);
 			        options.put("item-similarity-match", 1);
-			        options.put("default.bought", 10);
-			        options.put("default.sold", 10);
-			        options.put("fomula.buy", "bought");
-			        options.put("fomula.sell", "bought/2");
+			        options.put("default.bought", 128);
+			        options.put("cross_map_trade", 128);
+			        options.put("default.sold", 128);
+			        options.put("fomula.buy", "((2*bought*totalvolume)/(volume*volume))");
+			        options.put("fomula.sell", "((bought*totalvolume)/(volume*volume))");
 			        options.put("language","english");
 			        options.put("require-sold",true);
 			        options.put("use-exp-instead",false);
-			        options.put("require-stock-to-buy",true);
+			        options.put("require-stock-to-buy",false);
+			        options.put("keep-history-days",30);
+			        options.put("min-sell-price",0);
 			        options.put("idlist","idlist");
 			        for (final Entry<String, Object> node : options.entrySet()) {
 			        	 if (!getConfig().contains(node.getKey())) {
