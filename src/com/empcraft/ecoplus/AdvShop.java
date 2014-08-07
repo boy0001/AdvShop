@@ -1,4 +1,4 @@
-package com.empcraft.advshop;
+package com.empcraft.ecoplus;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -10,7 +10,6 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Timer;
@@ -28,17 +27,12 @@ import net.milkbowl.vault.permission.Permission;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.UnhandledException;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.Material;
-import org.bukkit.block.Block;
-import org.bukkit.block.Sign;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.block.SignChangeEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.material.MaterialData;
@@ -59,7 +53,6 @@ public final class AdvShop extends JavaPlugin implements Listener {
     private static File pricesFile;
     private static File historyFile;
     AdvShop plugin;
-    String version;
 	private ScriptEngine engine = (new ScriptEngineManager()).getEngineByName("JavaScript");
 	
 	// RETURNS ITEMSTACK | FRIENDLY NAME
@@ -263,8 +256,6 @@ public final class AdvShop extends JavaPlugin implements Listener {
 		return hasperm;
     }
     public void msg(Player player,String mystring) {
-    	mystring = mystring.replace("{PLUGIN}", "AdvShop").replace("{VERSION}", version).replace("{AUTHOR}", "Empire92").replace("{BREAK}", "\n");
-    	if (mystring.equals("")) { return; }
     	if (player==null) {
     		getServer().getConsoleSender().sendMessage(colorise(mystring));
     	}
@@ -298,8 +289,8 @@ public final class AdvShop extends JavaPlugin implements Listener {
     	}
 	    	reloadConfig();
 	    	saveConfig();
-			msg(null,getmsg("INFO1"));
-			msg(null,getmsg("INFO2"));
+			msg(null,"&8===&8Thanks for using &aAdvShop+&8 by &aEmpire92&8===");
+			msg(null,"&7 - requested by &8woebegone1&7 on bukkit forums");
     }
 	public boolean addLastLine(File fileName,String line) throws IOException {
 		if (getConfig().getInt("keep-history-days")==0) {
@@ -399,7 +390,7 @@ public final class AdvShop extends JavaPlugin implements Listener {
 					if (result) { tosend+=1; }
 				}
 				if (tosend>0) {
-					msg(null,getmsg("PURGE1").replace("{INT}",tosend+""));
+					msg(null,"&8===Purged &a"+tosend+" &8lines of old &aAdvShop&8 history===");
 				}
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -411,7 +402,6 @@ public final class AdvShop extends JavaPlugin implements Listener {
 	@Override
 	public void onEnable(){
 		plugin = this;
-		version = "0.2.0";
         if (!setupEconomy() ) {
             log.severe(String.format("[%s] - Disabled due to no Vault dependency found!", getDescription().getName()));
             Bukkit.getServer().getPluginManager().disablePlugin(this);
@@ -426,10 +416,9 @@ public final class AdvShop extends JavaPlugin implements Listener {
         if(myfile.exists()!=true) {  saveResource("prices.yml", false); }
         getConfig().options().copyDefaults(true);
         final Map<String, Object> options = new HashMap<String, Object>();
-        getConfig().set("version", version);
+        getConfig().set("version", "0.0.4");
         options.put("item-similarity-match", 1);
         options.put("default.bought", 128);
-        options.put("cross_map_trade", 128);
         options.put("default.sold", 128);
         options.put("fomula.buy", "((2*bought*totalvolume)/(volume*volume))");
         options.put("fomula.sell", "((bought*totalvolume)/(volume*volume))");
@@ -456,65 +445,6 @@ public final class AdvShop extends JavaPlugin implements Listener {
 		prices = YamlConfiguration.loadConfiguration(pricesFile);
 		timer.schedule (mytask,0l, 60000);
 	}
-	@EventHandler
-	public void onSignChange(SignChangeEvent event)
-    {
-		Block block = event.getBlock();
-		Sign sign = (Sign)block.getState();
-		String line1 = event.getLine(0);
-		String line2 = event.getLine(1);
-		Player player = event.getPlayer();
-		if (ChatColor.stripColor(line1).equalsIgnoreCase(ChatColor.stripColor(getmsg("SIGNSUCCESS0")))) {
-			if (checkperm(player,"advshop.create.buy")) {
-				Object[] result = LevensteinDistance(line2);
-				String name = result[1]+"";
-				if ((Integer) result[2] <= getConfig().getInt("item-similarity-match")) {
-					ItemStack item = (ItemStack) result[0];
-					if (name.length()>15) {
-						name = item.getTypeId()+":"+item.getAmount();
-					}
-					sign.setLine(1, name);
-					sign.update(true);
-					msg(player,getmsg("INFO15"));
-				}
-				else {
-					sign.setLine(0,getmsg("SIGNERROR0"));
-					sign.update(true);
-					msg(player,getmsg("SEARCH1").replace("{STRING}",line2.toLowerCase()).replace("{STRING2}",result[1].toString().toLowerCase().replace(" ", "_")));
-				}
-			}
-			else {
-				sign.setLine(0,getmsg("SIGNERROR0"));
-				sign.update(true);
-				msg(player,getmsg("ERROR0").replace("{STRING}","advshop.create.buy"));
-			}
-		}
-		else if (ChatColor.stripColor(line1).equalsIgnoreCase(ChatColor.stripColor(getmsg("SIGNSUCCESS1")))) {
-			if (checkperm(player,"advshop.create.sell")) {
-				Object[] result = LevensteinDistance(line2);
-				String name = result[1]+"";
-				if ((Integer) result[2] <= getConfig().getInt("item-similarity-match")) {
-					ItemStack item = (ItemStack) result[0];
-					if (name.length()>15) {
-						name = item.getTypeId()+":"+item.getAmount();
-					}
-					sign.setLine(1, name);
-					sign.update(true);
-					msg(player,getmsg("INFO15"));
-				}
-				else {
-					sign.setLine(0,getmsg("SIGNERROR1"));
-					sign.update(true);
-					msg(player,getmsg("SEARCH1").replace("{STRING}",line2.toLowerCase()).replace("{STRING2}",result[1].toString().toLowerCase().replace(" ", "_")));
-				}
-			}
-			else {
-				sign.setLine(0,getmsg("SIGNERROR1"));
-				sign.update(true);
-				msg(player,getmsg("ERROR0").replace("{STRING}","advshop.create.sell"));
-			}
-		}
-    }
 	public int getVolume(ItemStack item) {
 		int id = item.getTypeId();
 		int damage = item.getDurability();
@@ -588,7 +518,7 @@ public final class AdvShop extends JavaPlugin implements Listener {
 			}
 			}
 		catch (Exception e) {
-			msg(null,getmsg("ERROR1").replace("{STRING}",toeval+""));
+			msg(null,"&6Invalid buy formula &c"+toeval+"&6.");
 		}
 		return 0;
 	}
@@ -626,7 +556,7 @@ public final class AdvShop extends JavaPlugin implements Listener {
 			}
 		}
 		catch (Exception e) {
-			msg(null,getmsg("ERROR2").replace("{STRING}",toeval+""));
+			msg(null,"&6Invalid sell formula &c"+toeval+"&6.");
 		}
 		return 0;
 	}
@@ -786,7 +716,7 @@ public final class AdvShop extends JavaPlugin implements Listener {
 				if (args[0].equalsIgnoreCase("set" )) {
 					if (args.length>3) {
 						if (checkperm(player,"advshop.stock.set")==false) { 
-							msg(player,getmsg("ERROR0").replace("{STRING}","advshop.stock.set"));
+							msg(player,"&6You lack the node: &cadvshop.stock.set");
 							return false;
 						}
 						Object[] result = LevensteinDistance(args[2]);
@@ -796,30 +726,30 @@ public final class AdvShop extends JavaPlugin implements Listener {
 							item = (ItemStack) result[0];
 						}
 						else {
-							msg(player,getmsg("SEARCH1").replace("{STRING}",args[0].toLowerCase()).replace("{STRING2}",result[1].toString().toLowerCase().replace(" ", "_")));
+							msg(player,"&6Unknown item &c"+args[0].toLowerCase()+"&6.\n&6 - Did you mean &c"+result[1].toString().toLowerCase()+"&6?\n&6 - Maybe try &c/hand");
 							return true;
 						}
 						try {
 							if (args[1].equalsIgnoreCase("sold")) {
 								setSold(item, Integer.parseInt(args[3]));
-								msg(player,getmsg("WARNING1"));
+								msg(player,"&cChanging stock manually is not recommended&7 if you have the price dependent on stock over a period of time. You can disable time dependent stock in the config.yml.");
 							}
 							else if (args[1].equalsIgnoreCase("bought")) {
 								setBought(item, Integer.parseInt(args[3]));
-								msg(player,getmsg("WARNING1"));
+								msg(player,"&cChanging stock manually is not recommended&7 if you have the price dependent on stock over a period of time. You can disable time dependent stock in the config.yml.");
 							}
 						}
 						catch (Exception e) {
-							msg(player,getmsg("ERROR3").replace("{INT}",args[3]+""));
+							msg(player,"&6Unknown amount:&c "+args[3]+"&6.");
 						}
 					}
 					else {
-						msg(player,getmsg("ERROR4").replace("{STRING}","&c/advshop set <bought|sold> <item> <value>"));
+						msg(player,"&c/advshop set <bought|sold> <item> <value>");
 					}
 				}
 				else if (args[0].equalsIgnoreCase("reload" )) {
 					if (checkperm(player,"advshop.reload")==false) { 
-						msg(player,getmsg("ERROR0").replace("{STRING}","advshop.reload"));
+						msg(player,"&6You lack the node: &cadvshop.reload");
 						return false;
 					}
 					reloadConfig();
@@ -832,19 +762,16 @@ public final class AdvShop extends JavaPlugin implements Listener {
 			        if(myfile.exists()!=true) {  saveResource("prices.yml", false); }
 			        getConfig().options().copyDefaults(true);
 			        final Map<String, Object> options = new HashMap<String, Object>();
-			        getConfig().set("version", version);
+			        getConfig().set("version", "0.0.1");
 			        options.put("item-similarity-match", 1);
-			        options.put("default.bought", 128);
-			        options.put("cross_map_trade", 128);
-			        options.put("default.sold", 128);
-			        options.put("fomula.buy", "((2*bought*totalvolume)/(volume*volume))");
-			        options.put("fomula.sell", "((bought*totalvolume)/(volume*volume))");
+			        options.put("default.bought", 10);
+			        options.put("default.sold", 10);
+			        options.put("fomula.buy", "bought");
+			        options.put("fomula.sell", "bought/2");
 			        options.put("language","english");
 			        options.put("require-sold",true);
 			        options.put("use-exp-instead",false);
-			        options.put("require-stock-to-buy",false);
-			        options.put("keep-history-days",30);
-			        options.put("min-sell-price",0);
+			        options.put("require-stock-to-buy",true);
 			        options.put("idlist","idlist");
 			        for (final Entry<String, Object> node : options.entrySet()) {
 			        	 if (!getConfig().contains(node.getKey())) {
@@ -857,21 +784,21 @@ public final class AdvShop extends JavaPlugin implements Listener {
 					historyFile = new File(getDataFolder()+File.separator+"history.yml");
 					pricesFile = new File(getDataFolder()+File.separator+"prices.yml");
 					prices = YamlConfiguration.loadConfiguration(pricesFile);
-					msg(player,getmsg("INFO0"));
+					msg(player,"&6Reload of &cAdvShop &6complete!");
 					return true;
 				}
 			}
-			msg(player,getmsg("INFO3"));
+			msg(player,"&6Commands for `&cAdvShop&6':\n&6 - /advshop help &7- This page\n&6 - /advshop reload&7 - reloads AdvShop\n&6 - /hand &7- Info on held item\n&6 - /value &7- Info on a specific item\n&6 - /advbuy &7- AdvShop buy command\n&6 - /advsell &7- AdvShop sell command");
 			return true;
 		}
 		if (cmd.getName().equalsIgnoreCase("hand")) {
 			if (checkperm(player,"advshop.hand")==false) { 
-				msg(player,getmsg("ERROR0").replace("{STRING}","&cadvshop.hand"));
+				msg(player,"&6You lack the node: &cadvshop.hand");
 				return false;
 			}
 			
 			if (player == null) {
-				msg(player,getmsg("ERROR5"));
+				msg(player,"&cThis command can only be executed in-game");
 				return false;
 			}
 			ItemStack item = player.getInventory().getItemInHand();
@@ -889,7 +816,7 @@ public final class AdvShop extends JavaPlugin implements Listener {
 				name = LevensteinDistance(item.getTypeId()+":"+item.getDurability())[1]+"";
 			}
 			item = new ItemStack(item.getTypeId(),1,item.getDurability());
-			msg(player,getmsg("INFO4").replace("{STRING}",name).replace("{STRING2}",item.getTypeId()+"").replace("{STRING3}",item.getDurability()+""));
+			msg(player,"&6Item: &c"+name+" &6- &c"+item.getTypeId()+":"+item.getDurability());
 			return true;
 		}
 //		if (cmd.getName().equalsIgnoreCase("selltop")) {
@@ -900,11 +827,11 @@ public final class AdvShop extends JavaPlugin implements Listener {
 //		}
 		if (cmd.getName().equalsIgnoreCase("sellall")) {
 			if (checkperm(player,"advshop.sellall")==false) { 
-				msg(player,getmsg("ERROR0").replace("{STRING}","advshop.sellall"));
+				msg(player,"&6You lack the node: &cadvshop.sellall");
 				return true;
 			}
 			if (player == null) {
-				msg(player,getmsg("ERROR5"));
+				msg(player,"&cThis command can only be executed in-game");
 				return true;
 			}
 			Inventory inventory = player.getInventory();
@@ -952,11 +879,11 @@ public final class AdvShop extends JavaPlugin implements Listener {
 				if (getConfig().getBoolean("use-exp-instead")) {
 					ExperienceManager expMan = new ExperienceManager(player);
 					expMan.changeExp(money);
-					msg(player,getmsg("INFO5").replace("{INT}",""+total).replace("{STRING}",concatDouble(money+"")+" exp"));
+					msg(player,"&6Sold &c"+total+" &6 &citems&6 for &c"+concatDouble(money+"")+" exp&6.");
 				}
 				else {
 					econ.depositPlayer(player.getName(), money);
-					msg(player,getmsg("INFO5").replace("{INT}",""+total).replace("{STRING}","$"+concatDouble(money+"")));
+					msg(player,"&6Sold &c"+total+" &6 &citems&6 for &c$"+concatDouble(money+"")+"&6.");
 				}
 				try {
 					idlist.save(idlistFile);
@@ -966,18 +893,18 @@ public final class AdvShop extends JavaPlugin implements Listener {
 				}
 			}
 			else {
-				msg(player,getmsg("ERROR6"));
+				msg(player,"&7You have &cnothing&7 of value to sell, even your soul.");
 			}
 		}
 		if (cmd.getName().equalsIgnoreCase("advsell")) {
 			if (args.length>0) {
 				if (checkperm(player,"advshop.sell")==false) { 
-					msg(player,getmsg("ERROR0").replace("{STRING}","advshop.sell"));
+					msg(player,"&6You lack the node: &cadvshop.sell");
 					return true;
 				}
 				
 				if (player == null) {
-					msg(player,getmsg("ERROR5"));
+					msg(player,"&cThis command can only be executed in-game");
 					return true;
 				}
 				ItemStack item;
@@ -998,16 +925,16 @@ public final class AdvShop extends JavaPlugin implements Listener {
 						item = (ItemStack) result[0];
 					}
 					else {
-						msg(player,getmsg("SEARCH1").replace("{STRING}",args[0].toLowerCase()).replace("{STRING2}",result[1].toString().toLowerCase().replace(" ", "_")));
+						msg(player,"&6Unknown item &c"+args[0].toLowerCase()+"&6.\n&6 - Did you mean &c"+result[1].toString().toLowerCase()+"&6?\n&6 - Maybe try &c/hand");
 						return true;
 					}
 				}
 				if (name.equals("null")) {
-					msg(player,getmsg("ERROR7"));
+					msg(player,"&6This item is &cnot &6stocked.\n&7 - Get an admin to add it if you beleive it should be stocked.");
 					return true;
 				}
 				if (item==null) {
-					msg(player,getmsg("ERROR4").replace("{STRING}","/advsell <hand|item> <amount>"));
+					msg(player,"&6/sell <hand|item> <amount>");
 					return true;
 				}
 				if (item.getType().equals(Material.AIR)==false) {
@@ -1020,7 +947,7 @@ public final class AdvShop extends JavaPlugin implements Listener {
 								amount = Integer.parseInt(args[1]);
 							}
 							catch (Exception e) {
-								msg(player,getmsg("ERROR3").replace("{INT}",args[1]+""));
+								msg(player,"&6Unknown amount&c "+args[1]+"&6.");
 								return true;
 							}
 							for (ItemStack current:inventory.getContents()) {
@@ -1042,7 +969,7 @@ public final class AdvShop extends JavaPlugin implements Listener {
 							total = amount;
 						}
 						if (total<amount) {
-							msg(player,getmsg("ERROR8").replace("{STRING}",name).replace("{INT}",total+""));
+							msg(player,"&6You only have &c"+total+"&6 "+name+".");
 							return true;
 						}
 						double money = 0;
@@ -1081,11 +1008,11 @@ public final class AdvShop extends JavaPlugin implements Listener {
 							ecosymbol = "exp ";
 							ExperienceManager expMan = new ExperienceManager(player);
 							expMan.changeExp(money);
-							msg(player,getmsg("INFO6").replace("{INT}",""+total).replace("{STRING}",name).replace("{STRING2}",concatDouble(money+"")+" exp"));
+							msg(player,"&6Sold &c"+total+" &6of &c"+name+"&6 for &c"+concatDouble(money+"")+" exp&6.");
 						}
 						else {
 							econ.depositPlayer(player.getName(), money);
-							msg(player,getmsg("INFO6").replace("{INT}",""+total).replace("{STRING}",name).replace("{STRING2}","$"+concatDouble(money+"")));
+							msg(player,"&6Sold &c"+total+" &6of &c"+name+"&6 for &c$"+concatDouble(money+"")+"&6.");
 						}
 						
 						try {
@@ -1110,17 +1037,17 @@ public final class AdvShop extends JavaPlugin implements Listener {
 						}
 					}
 					else {
-						msg(player,getmsg("ERROR9").replace("{STRING}",name));
+						msg(player,"&6You do not have any &c"+name);
 						return true;
 					}
 				}
 				else {
-					msg(player,getmsg("ERROR10").replace("{STRING}","AIR"));
+					msg(player,"&6You cannot sell &cAIR&6.");
 					return true;
 				}
 			}
 			else {
-				msg(player,getmsg("ERROR4").replace("{STRING}","/advsell <hand|item> <amount>"));
+				msg(player,"&6/sell <hand|item> <amount>");
 				return true;
 			}
 			return true;
@@ -1128,11 +1055,12 @@ public final class AdvShop extends JavaPlugin implements Listener {
 		else if (cmd.getName().equalsIgnoreCase("advbuy")) {
 			if (args.length==2) {
 				if (checkperm(player,"advshop.sell")==false) { 
-					msg(player,getmsg("ERROR0").replace("{STRING}","advshop.buy"));
+					msg(player,"&6You lack the node: &cadvshop.buy");
 					return true;
 				}
+				
 				if (player == null) {
-					msg(player,getmsg("ERROR5"));
+					msg(player,"&cThis command can only be executed in-game");
 					return true;
 				}
 				Inventory inventory = player.getInventory();
@@ -1144,7 +1072,7 @@ public final class AdvShop extends JavaPlugin implements Listener {
 					amount = Integer.parseInt(args[1]);
 				}
 				catch (Exception e) {
-					msg(player,getmsg("ERROR3").replace("{INT}",args[1]+""));
+					msg(player,"&6Unknown amount&c "+args[1]+"&6.");
 					return true;
 				}
 				Object[] result = LevensteinDistance(args[0]);
@@ -1153,11 +1081,11 @@ public final class AdvShop extends JavaPlugin implements Listener {
 					item = (ItemStack) result[0];
 				}
 				else {
-					msg(player,getmsg("SEARCH1").replace("{STRING}",args[0].toLowerCase()).replace("{STRING2}",result[1].toString().toLowerCase().replace(" ", "_")));
+					msg(player,"&6Unknown item &c"+args[0].toLowerCase()+"&6.\n&6 - Did you mean &c"+result[1].toString().toLowerCase()+"&6?\n&6 - Maybe try &c/itemdb");
 					return true;
 				}
 				if (item==null) {
-					msg(player,getmsg("ERROR4").replace("{STRING}","/advbuy <item> <amount>"));
+					msg(player,"&6/buy <item> <amount>");
 					return true;
 				}
 				if (item.getType().equals(Material.AIR)==false) {
@@ -1177,19 +1105,19 @@ public final class AdvShop extends JavaPlugin implements Listener {
 					free = getFreeSpace(player, item);
 					if (free<amount) {
 						if (free == 0) {
-							msg(player,getmsg("ERROR11"));
+							msg(player,"&6Your inventory is &cfull&6.");
 						}
 						else {
-							msg(player,getmsg("ERROR12").replace("{INT}",""+free).replace("{STRING}",name));
+							msg(player,"&6You only have room for &c"+free+" &6"+name+".");
 						}
 						return true;
 					}
 					if (getBuyValue(item)>money) {
 						if (usingexp) {
-							msg(player,getmsg("ERROR13"));
+							msg(player,"&6You do not have enough &cexperience&6.");
 						}
 						else {
-							msg(player,getmsg("ERROR14"));
+							msg(player,"&6You do not have enough &cmoney&6.");
 						}
 						return true;
 					}
@@ -1203,10 +1131,10 @@ public final class AdvShop extends JavaPlugin implements Listener {
 								if (successful==false) {
 									money+=price;
 									if (total> 0) {
-										msg(player,getmsg("ERROR15").replace("{INT}",""+total).replace("{STRING}",name));
+										msg(player,"&6Shop only had enough for &c"+total+" &6"+name+".");
 									}
 									else {
-										msg(player,getmsg("ERROR16").replace("{STRING}",name));
+										msg(player,"&6Shop is &cout of stock&6 of "+name+".");
 										return true;
 									}
 									break;
@@ -1221,17 +1149,17 @@ public final class AdvShop extends JavaPlugin implements Listener {
 							}
 						}
 						if (hasenough == false) {
-							msg(player,getmsg("ERROR15").replace("{INT}",""+total).replace("{STRING}",name));
+							msg(player,"&6You only had enough for &c"+total+" &6"+name+".");
 						}
 						String ecosymbol = "$";
 						if (usingexp) {
 							expMan.setExp(money);
 							ecosymbol = "exp ";
-							msg(player,getmsg("INFO8").replace("{INT}",""+total).replace("{STRING}",name).replace("{STRING2}",concatDouble(money+"")+" exp"));
+							msg(player,"&6Bought &c"+total+" &6of &c"+name+"&6 for &c"+concatDouble((totalmoney-money)+"")+" exp&6.");
 						}
 						else {
 							econ.withdrawPlayer(player.getName(), totalmoney-money);
-							msg(player,getmsg("INFO8").replace("{INT}",""+total).replace("{STRING}",name).replace("{STRING2}","$"+concatDouble(money+"")));
+							msg(player,"&6Bought &c"+total+" &6of &c"+name+"&6 for &c$"+concatDouble((totalmoney-money)+"")+"&6.");
 						}
 						item.setAmount(total);
 						inventory.addItem(item);
@@ -1259,23 +1187,23 @@ public final class AdvShop extends JavaPlugin implements Listener {
 					}
 				}
 				else {
-					msg(player,getmsg("ERROR17").replace("{STRING}","AIR"));
+					msg(player,"&6You cannot buy &cAIR&6.");
 					return true;
 				}
 				
 			}
 			else {
-				msg(player,getmsg("ERROR4").replace("{STRING}","/advbuy <item> <amount>"));
+				msg(player,"&6/buy <item> <amount>");
 			}
 		}
 		else if (cmd.getName().equalsIgnoreCase("value")) {
 			if (checkperm(player,"advshop.value")==false) { 
-				msg(player,getmsg("ERROR0").replace("{STRING}","advshop.value"));
+				msg(player,"&6You lack the node: &cadvshop.value");
 				return false;
 			}
 			
 			if (player == null) {
-				msg(player,getmsg("ERROR5"));
+				msg(player,"&cThis command can only be executed in-game");
 				return false;
 			}
 			if (args.length>0) {
@@ -1289,7 +1217,7 @@ public final class AdvShop extends JavaPlugin implements Listener {
 						item = (ItemStack) result[0];
 					}
 					else {
-						msg(player,getmsg("SEARCH1").replace("{STRING}",args[0].toLowerCase()).replace("{STRING2}",result[1].toString().toLowerCase().replace(" ", "_")));
+						msg(player,"&6Unknown item &c"+args[0].toLowerCase()+"&6.\n&6 - Did you mean &c"+result[1].toString().toLowerCase()+"&6?\n&6 - Maybe try &c/hand");
 						return false;
 					}
 				}
@@ -1311,13 +1239,13 @@ public final class AdvShop extends JavaPlugin implements Listener {
 				if (item.getDurability()!=0) {
 					itemid+="-"+item.getDurability();
 				}
-				msg(player,getmsg("INFO4").replace("{STRING}",name).replace("{STRING2}",item.getTypeId()+"").replace("{STRING3}",item.getDurability()+""));
+				msg(player,"&6Item: &c"+name+" &6- &c"+item.getTypeId()+":"+item.getDurability());
 				try {
-					msg(player,getmsg("INFO9").replace("{INT}",concatDouble(""+getSellValue(item))));
-					msg(player,getmsg("INFO10").replace("{INT}",concatDouble(""+getBuyValue(item))));
+					msg(player,"&6Sell Cost: &c"+concatDouble(""+getSellValue(item)));
+					msg(player,"&6Buy Cost: &c"+concatDouble(""+getBuyValue(item)));
 					try {
-						msg(player,getmsg("INFO11").replace("{INT}",prices.getString(itemid+".bought")));
-						msg(player,getmsg("INFO12").replace("{INT}",prices.getString(itemid+".sold")));
+						msg(player,"&6Amount Bought: &c"+prices.getString(itemid+".bought"));
+						msg(player,"&6Amount Sold: &c"+prices.getString(itemid+".sold"));
 					}
 					catch (Exception e) {
 						
@@ -1325,73 +1253,15 @@ public final class AdvShop extends JavaPlugin implements Listener {
 				}
 				catch (Exception e) {
 					e.printStackTrace();
-					msg(player,getmsg("ERROR18"));
-					msg(player,getmsg("ERROR19"));
+					msg(player,"&6Value: &cUtterly worthless");
+					msg(player,"&6Stock: &cLess than 12 parsecs");
 				}
 				return true;
 			}
 			else {
-				msg(player,getmsg("ERROR4").replace("{STRING}","&c/value <hand|item>"));
+				msg(player,"/value <hand|item>");
 			}
 		}
-		else if(cmd.getName().equalsIgnoreCase("xpp")){
-    		if (checkperm(player,"advshop.xpp")) {
-    		if (args.length != 2){
-    			msg(player,getmsg("ERROR4").replace("{STRING}","&c/xpp <player> <amount>"));
-    		}
-    		else {
-    			if (player.getName().equalsIgnoreCase(args[0])!= true) {
-    				List<Player> matches = getServer().matchPlayer(args[0]);
-    				if (matches.isEmpty()) {
-    					msg(player,getmsg("ERROR20").replace("{STRING}",args[0]));
-    					msg(player,"&6No online player found for: &c"+args[0]);
-    				}
-    				else if (matches.size() > 1) {
-    					msg(player,getmsg("ERROR21").replace("{STRING}",args[0]));
-    				}
-    				else {
-    					Player user = matches.get(0);
-    					if ((user.getWorld() == (player).getWorld()) || (this.getConfig().getString("cross_map_trade").equalsIgnoreCase("true"))) {
-          				  try {
-    						if ((player).getTotalExperience() >= Integer.parseInt(args[1])) {
-    							if (Integer.parseInt(args[1])>0) {
-    							      int myxp = (player).getTotalExperience();
-    							 
-    							      (player).setTotalExperience(0);
-    							      (player).setLevel(0);
-    							      (player).setExp(0);
-    							      (player).giveExp(myxp - Integer.parseInt(args[1]));
-    							      msg(player,getmsg("INFO13").replace("{INT}",""+(myxp-Integer.parseInt(args[1]))));
-    							      msg(player,getmsg("INFO14").replace("{INT}",""+(Integer.parseInt(args[1]))));
-    							      user.giveExp(Integer.parseInt(args[1]));
-    							}
-    							else {
-    								msg(player,getmsg("ERROR24").replace("{INT}",""+args[1]));
-    								msg(player,"&6Amount must be positive: &c"+args[1]+".");
-    							}
-          				  }
-    						else {
-    							msg(player,getmsg("ERROR25").replace("{INT}",""+args[1]));
-    						}
-          				  }
-          				  catch (Exception e) {
-          					msg(player,getmsg("ERROR3").replace("{INT}",args[1]+""));
-          				  }
-    					}
-    					else {
-    						msg(player,getmsg("ERROR22"));
-    					}
-    				}
-    			}
-    			else {
-    				msg(player,getmsg("ERROR23"));
-    			}
-    		}
-    		}
-    		else {
-    			msg(player,getmsg("ERROR0").replace("{STRING}","advshop.xpp"));
-    		}
-    	}
 		
 		
 		

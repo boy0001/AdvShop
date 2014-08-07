@@ -1,4 +1,4 @@
-package com.empcraft.advshop;
+package com.empcraft.ecoplus;
 /**
  * ImprovedOfflinePlayer, a library for Bukkit.
  * Copyright (C) 2014 one4me@github.com

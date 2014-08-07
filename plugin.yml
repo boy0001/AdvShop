@@ -1,14 +1,11 @@
-# If you would like to change the commands to something else, this can be done in the commands.yml file.
-# View this page for help on adding command aliases: http://wiki.bukkit.org/Commands.yml
 name: AdvShop
-main: com.empcraft.advshop.AdvShop
-version: 0.2.0
+main: com.empcraft.ecoplus.AdvShop
+version: 0.2.3
 author: Empire92
 website: www.empcraft.com
 depend: [Vault]
+softdepend: [WhatIsIt,listbuilder]
 commands:
-   xpp:
-      description: XP trade command.
    db:
       description: AdvShop item data byte command.
    advbuy:
